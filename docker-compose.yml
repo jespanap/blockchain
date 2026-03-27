@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Servicio de Machine Learning (Python)
+  ml-service:
+    build: ./ml-service
+    container_name: blockchain-ml-service
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blockchain-network
+
+  # Backend API (Go)
+  backend:
+    build: ./backend
+    container_name: blockchain-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      ml-service:
+        condition: service_healthy
+    environment:
+      - ML_SERVICE_URL=http://ml-service:5000
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - blockchain-network
+
+  # Frontend (Web)
+  frontend:
+    build: ./frontend
+    container_name: blockchain-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - blockchain-network
+
+networks:
+  blockchain-network:
+    driver: bridge
