@@ -106,18 +106,18 @@ var (
 
 	// stakeTable original (MANTENER)
 	stakeTable = map[string]int{
-		"Alice":   50,
-		"Bob":     30,
-		"Charlie": 15,
-		"David":   5,
+		"Alice":   35,
+		"Bob":     32,
+		"Charlie": 28,
+		"David":   25,
 	}
 
 	// Información extendida de validadores
 	validatorInfo = map[string]*ValidatorInfo{
-		"Alice":   {Name: "Alice", Stake: 50, AverageResponseMs: 120, FailureCount: 2},
-		"Bob":     {Name: "Bob", Stake: 30, AverageResponseMs: 95, FailureCount: 0},
-		"Charlie": {Name: "Charlie", Stake: 15, AverageResponseMs: 200, FailureCount: 5},
-		"David":   {Name: "David", Stake: 5, AverageResponseMs: 150, FailureCount: 1},
+		"Alice":   {Name: "Alice", Stake: 35, AverageResponseMs: 80, FailureCount: 2},
+		"Bob":     {Name: "Bob", Stake: 32, AverageResponseMs: 78, FailureCount: 1},
+		"Charlie": {Name: "Charlie", Stake: 28, AverageResponseMs: 75, FailureCount: 2},
+		"David":   {Name: "David", Stake: 25, AverageResponseMs: 82, FailureCount: 1},
 	}
 
 	minerList = []string{"Miner1", "Miner2", "Miner3", "Miner4"}
@@ -234,17 +234,25 @@ func selectValidatorByML() (string, float64, error) {
 		return "", 0, err
 	}
 
-	bestValidator := ""
-	bestScore := -1.0
+	// Sumar todos los scores
+	total := 0.0
+	for _, score := range scores {
+		total += score
+	}
 
+	// Número aleatorio
+	r := rand.Float64() * total
+
+	// Selección tipo ruleta
+	accumulated := 0.0
 	for name, score := range scores {
-		if score > bestScore {
-			bestScore = score
-			bestValidator = name
+		accumulated += score
+		if r <= accumulated {
+			return name, score, nil
 		}
 	}
 
-	return bestValidator, bestScore, nil
+	return "", 0, fmt.Errorf("no validator selected")
 }
 
 // ================================================================
